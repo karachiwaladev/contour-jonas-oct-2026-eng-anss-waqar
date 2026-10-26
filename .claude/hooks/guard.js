@@ -22,7 +22,10 @@ const rules = [
   [/\bgit\s+stash\s+(drop|clear)\b/, "discards stashed work"],
   [/\bgit\s+(checkout\s+--(\s|$)|restore\b)/, "discards working-tree changes"],
   [/\bgh\s+\S+\s+delete\b/, "deletes a GitHub resource"],
-  [/\bgh\s+pr\s+merge\b[^\n]*(--delete-branch|\s-d\b)/, "deletes the PR branch"],
+  // Only the user merges, on GitHub; ticket work never goes straight to main.
+  [/\bgh\s+pr\s+merge\b/, "merges a PR (only the user merges, on GitHub)"],
+  [/\bgh\s+api\b[^\n]*\/pulls\/\d+\/merge\b/, "merges a PR (only the user merges, on GitHub)"],
+  [/\bgit\s+push\b[^\n]*\s(\S+:)?(refs\/heads\/)?main(\s|$)/, "pushes straight to main (ticket work goes through a PR)"],
   [/\bgh\s+repo\s+(archive|rename|edit)\b/, "changes repository settings"],
   [/\bgh\s+api\b[^\n]*(-X|--method)\s*DELETE\b/i, "deletes a GitHub resource"],
   [/(^|[\s;&|(])mkfs(\.\w+)?\s/, "formats a disk"],

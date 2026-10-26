@@ -38,14 +38,14 @@ single list of what exists in the factory.
 ## The factory loop
 
 - Skill: `.claude/skills/factory-loop/SKILL.md`. Run it with `/factory-loop [interval]`.
-- Each tick picks up open tickets, oldest first, from authors with write access.
-  - Questions are answered and closed directly (no files, no PR).
-  - Projects and features go through: clarify with the owner → plan → approval →
-    build → verify in Chrome (chrome-devtools) → screenshots.
-- **Every file change is a PR** from a `factory/issue-N-…` branch, with the plan,
-  the checks and the screenshots. The ticket stays open until a human approves:
-  merges the PR, approves it in chat, or another collaborator approves it.
-  Merging closes the ticket (`Closes #N`), and it gets a `🏭 Done` comment.
+- Each tick picks up new tickets right away, oldest first, from authors with write access.
+  It branches (`factory/issue-N-…`) and works without asking in chat:
+  - Questions → `answers/issue-N.md`. Docs → the file.
+  - Projects and features → decide on sensible defaults → build → verify in Chrome
+    (chrome-devtools) → screenshots.
+- **Every ticket becomes a PR** with its decisions, checks and screenshots. **Only
+  the owner merges, on GitHub.** That merge is the approval, and it closes the ticket
+  (`Closes #N`). Review comments on a PR are picked up and addressed by later ticks.
 - `🏭 Blocked` and `🏭 On hold` tickets wait for a human.
 
 ## Hooks (in `.claude/settings.local.json`)
