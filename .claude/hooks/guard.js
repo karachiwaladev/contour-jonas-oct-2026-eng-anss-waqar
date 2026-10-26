@@ -22,6 +22,7 @@ const rules = [
   [/\bgit\s+stash\s+(drop|clear)\b/, "discards stashed work"],
   [/\bgit\s+(checkout\s+--(\s|$)|restore\b)/, "discards working-tree changes"],
   [/\bgh\s+\S+\s+delete\b/, "deletes a GitHub resource"],
+  [/\bgh\s+pr\s+merge\b[^\n]*(--delete-branch|\s-d\b)/, "deletes the PR branch"],
   [/\bgh\s+repo\s+(archive|rename|edit)\b/, "changes repository settings"],
   [/\bgh\s+api\b[^\n]*(-X|--method)\s*DELETE\b/i, "deletes a GitHub resource"],
   [/\b(mkfs|format)\b\s+\S/i, "formats a disk"],

@@ -39,16 +39,19 @@ single list of what exists in the factory.
 
 - Skill: `.claude/skills/factory-loop/SKILL.md`. Run it with `/factory-loop [interval]`.
 - Each tick picks up open tickets, oldest first, from authors with write access.
-  - Questions and docs are done directly.
+  - Questions are answered and closed directly (no files, no PR).
   - Projects and features go through: clarify with the owner → plan → approval →
-    build → verify in Chrome (chrome-devtools) → screenshots on the ticket.
-- Finished tickets get a `🏭 Done` comment and are closed as completed.
-  `🏭 Blocked` and `🏭 On hold` tickets wait for a human.
+    build → verify in Chrome (chrome-devtools) → screenshots.
+- **Every file change is a PR** from a `factory/issue-N-…` branch, with the plan,
+  the checks and the screenshots. The ticket stays open until a human approves:
+  merges the PR, approves it in chat, or another collaborator approves it.
+  Merging closes the ticket (`Closes #N`), and it gets a `🏭 Done` comment.
+- `🏭 Blocked` and `🏭 On hold` tickets wait for a human.
 
 ## Hooks (in `.claude/settings.local.json`)
 
-- `.claude/hooks/auto-commit.js` (Stop): commits and pushes all work to `main`
-  at the end of every turn. Never force-pushes.
+- `.claude/hooks/auto-commit.js` (Stop): commits and pushes the checked-out
+  branch at the end of every turn. Never force-pushes.
 - `.claude/hooks/guard.js` (PreToolUse): blocks destructive shell commands.
 - `.claude/hooks/log-prompts.js` (Stop): logs prompts to `.claude/prompts.jsonl`
   (gitignored).
@@ -56,6 +59,6 @@ single list of what exists in the factory.
 ## Ground rules
 
 - **Non-destructive only.** Add and improve; never delete files or rewrite git history.
-- **Push to `main`.** Only what is on GitHub counts.
+- **Ticket work reaches `main` only through a reviewed PR.** Only what is on GitHub counts.
 - Training repo: no real keys or secrets, and no Jonas or Contour code.
 - Verify before claiming done. Re-read docs you write, and run apps in a real browser.
