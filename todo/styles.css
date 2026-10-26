@@ -56,7 +56,8 @@ h1 { margin: 0 0 16px; font-size: 1.75rem; }
 .new-task .details { flex-wrap: wrap; }
 .field { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.9rem; }
 .field.grow { flex: 1; min-width: 180px; }
-.new-task input {
+.new-task input,
+.new-task select {
   flex: 1;
   padding: 10px 12px;
   font: inherit;
@@ -99,6 +100,7 @@ button {
 .task .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 2px; font-size: 0.8rem; color: var(--muted); }
 .task.due-overdue .due { color: var(--danger); font-weight: 600; }
 .task.due-today .due { color: var(--accent); font-weight: 600; }
+.repeat { color: var(--accent); font-weight: 600; }
 .tag {
   padding: 0 8px;
   border-radius: 999px;

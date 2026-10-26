@@ -33,7 +33,7 @@ single list of what exists in the factory.
 
 | Folder | What it is | Status | Tickets |
 |---|---|---|---|
-| [`todo/`](todo/README.md) | Todo app with tasks stored in localStorage (plain HTML/JS); filters, due dates, tags | Live | #4, #5 |
+| [`todo/`](todo/README.md) | Todo app with tasks stored in localStorage (plain HTML/JS); filters, due dates, tags, recurring tasks | Live | #4, #5, #7 |
 
 ## The factory loop
 

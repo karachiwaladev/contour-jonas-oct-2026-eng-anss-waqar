@@ -1,9 +1,11 @@
 // Todo app: tasks persist in localStorage. Storage is kept separate from
 // rendering so the data model can grow without UI rewrites.
 //
-// Task shape: { id, title, done, createdAt, dueDate?, tags? }
-// dueDate ("YYYY-MM-DD") and tags (string[]) were added in #5 and are
-// optional, so tasks saved by the #4 version load unchanged.
+// Task shape: { id, title, done, createdAt, dueDate?, tags?, repeat?, nextId? }
+// dueDate ("YYYY-MM-DD") and tags (string[]) were added in #5; repeat
+// ("daily" | "weekly" | "monthly") and nextId (the occurrence a completed
+// recurring task spawned) in #7. All are optional, so tasks saved by older
+// versions load unchanged.
 
 const store = {
   key: "todo.tasks.v1",
@@ -27,8 +29,11 @@ function normalize(task) {
     ...task,
     dueDate: typeof task.dueDate === "string" && task.dueDate ? task.dueDate : null,
     tags: Array.isArray(task.tags) ? task.tags : [],
+    repeat: REPEATS.includes(task.repeat) ? task.repeat : null,
   };
 }
+
+const REPEATS = ["daily", "weekly", "monthly"];
 
 let tasks = store.load();
 const filters = { status: "all", tag: null };
@@ -42,14 +47,32 @@ function parseTags(text) {
   return [...new Set(tags)];
 }
 
-function addTask(title, dueDate, tags) {
-  tasks.unshift({ id: newId(), title, done: false, createdAt: new Date().toISOString(), dueDate: dueDate || null, tags });
+function addTask(title, dueDate, tags, repeat) {
+  // A recurring task needs a due date to count from; default to today.
+  const due = dueDate || (repeat ? today() : null);
+  tasks.unshift({ id: newId(), title, done: false, createdAt: new Date().toISOString(), dueDate: due, tags, repeat: repeat || null });
   store.save(tasks);
 }
 
 function toggleTask(id) {
   const task = tasks.find((t) => t.id === id);
-  if (task) task.done = !task.done;
+  if (!task) return;
+  task.done = !task.done;
+  // Completing a recurring task spawns its next occurrence, once. Unticking
+  // and re-ticking it later must not create a duplicate.
+  if (task.done && task.repeat && !task.nextId) {
+    const next = {
+      id: newId(),
+      title: task.title,
+      done: false,
+      createdAt: new Date().toISOString(),
+      dueDate: nextDueDate(task.dueDate || today(), task.repeat),
+      tags: [...task.tags],
+      repeat: task.repeat,
+    };
+    task.nextId = next.id;
+    tasks.unshift(next);
+  }
   store.save(tasks);
 }
 
@@ -62,8 +85,21 @@ function deleteTask(id) {
 
 // Today as "YYYY-MM-DD" in local time, so it compares directly with <input type="date"> values.
 function today() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return toISODate(new Date());
+}
+
+const toISODate = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+// Strict schedule: exactly one interval after the previous due date, even if
+// that is still in the past. Monthly clamps to the month's last day
+// (Oct 31 -> Nov 30, Jan 31 -> Feb 28/29).
+function nextDueDate(dueDate, repeat) {
+  const [y, m, d] = dueDate.split("-").map(Number);
+  if (repeat === "daily") return toISODate(new Date(y, m - 1, d + 1));
+  if (repeat === "weekly") return toISODate(new Date(y, m - 1, d + 7));
+  const lastDayOfNextMonth = new Date(y, m + 1, 0).getDate();
+  return toISODate(new Date(y, m, Math.min(d, lastDayOfNextMonth)));
 }
 
 function dueState(task) {
@@ -100,6 +136,7 @@ const form = document.getElementById("new-task");
 const input = document.getElementById("title");
 const dueInput = document.getElementById("due");
 const tagsInput = document.getElementById("tags");
+const repeatInput = document.getElementById("repeat");
 const error = document.getElementById("error");
 const list = document.getElementById("list");
 const empty = document.getElementById("empty");
@@ -161,7 +198,7 @@ function renderTask(task) {
   title.textContent = task.title;
   body.append(title);
 
-  if (task.dueDate || task.tags.length) {
+  if (task.dueDate || task.tags.length || task.repeat) {
     const meta = document.createElement("span");
     meta.className = "meta";
     if (task.dueDate) {
@@ -170,6 +207,13 @@ function renderTask(task) {
       const prefix = state === "overdue" ? "Overdue · " : state === "today" ? "Due today · " : "Due ";
       due.textContent = prefix + formatDue(task.dueDate);
       meta.append(due);
+    }
+    if (task.repeat) {
+      const repeat = document.createElement("span");
+      repeat.className = "repeat";
+      repeat.textContent = `↻ ${task.repeat[0].toUpperCase()}${task.repeat.slice(1)}`;
+      repeat.title = `Repeats ${task.repeat}`;
+      meta.append(repeat);
     }
     for (const tag of task.tags) {
       const chip = document.createElement("span");
@@ -202,7 +246,7 @@ form.addEventListener("submit", (event) => {
     return;
   }
   error.hidden = true;
-  addTask(title, dueInput.value, parseTags(tagsInput.value));
+  addTask(title, dueInput.value, parseTags(tagsInput.value), repeatInput.value);
   form.reset();
   input.focus();
   render();
