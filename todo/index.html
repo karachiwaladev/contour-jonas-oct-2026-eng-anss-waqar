@@ -15,11 +15,32 @@
     </header>
 
     <form id="new-task" class="new-task" autocomplete="off">
-      <label class="visually-hidden" for="title">New task</label>
-      <input id="title" name="title" type="text" placeholder="What needs doing?" maxlength="200" required>
-      <button type="submit">Add</button>
+      <div class="row">
+        <label class="visually-hidden" for="title">New task</label>
+        <input id="title" name="title" type="text" placeholder="What needs doing?" maxlength="200" required>
+        <button type="submit">Add</button>
+      </div>
+      <div class="row details">
+        <label class="field">
+          <span>Due</span>
+          <input id="due" name="due" type="date">
+        </label>
+        <label class="field grow">
+          <span>Tags</span>
+          <input id="tags" name="tags" type="text" placeholder="work, urgent" maxlength="200">
+        </label>
+      </div>
     </form>
     <p class="error" id="error" role="alert" hidden>Please enter a task.</p>
+
+    <nav class="filters" aria-label="Filters">
+      <div class="segmented" role="group" aria-label="Status" id="status-filter">
+        <button type="button" data-status="all" aria-pressed="true">All</button>
+        <button type="button" data-status="active" aria-pressed="false">Active</button>
+        <button type="button" data-status="completed" aria-pressed="false">Completed</button>
+      </div>
+      <div class="tag-filter" role="group" aria-label="Tag" id="tag-filter" hidden></div>
+    </nav>
 
     <ul id="list" class="list" aria-label="Tasks"></ul>
     <p class="empty" id="empty">No tasks yet. Add one above.</p>

@@ -8,6 +8,7 @@
   --accent-text: #ffffff;
   --danger: #c62828;
   --error: #b42318;
+  --chip: #eef1f6;
   color-scheme: light;
 }
 
@@ -22,11 +23,13 @@
     --accent-text: #0b0e14;
     --danger: #ff6b6b;
     --error: #ff8a80;
+    --chip: #2a303b;
     color-scheme: dark;
   }
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
@@ -48,7 +51,11 @@ header { display: flex; align-items: baseline; justify-content: space-between; g
 h1 { margin: 0 0 16px; font-size: 1.75rem; }
 .count { margin: 0; color: var(--muted); font-size: 0.9rem; }
 
-.new-task { display: flex; gap: 8px; }
+.new-task { display: flex; flex-direction: column; gap: 8px; }
+.new-task .row { display: flex; gap: 8px; }
+.new-task .details { flex-wrap: wrap; }
+.field { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.9rem; }
+.field.grow { flex: 1; min-width: 180px; }
 .new-task input {
   flex: 1;
   padding: 10px 12px;
@@ -86,8 +93,40 @@ button {
 }
 .task label { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer; }
 .task input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+.task .body { display: flex; flex-direction: column; min-width: 0; }
 .task .title { overflow-wrap: anywhere; }
 .task.done .title { color: var(--muted); text-decoration: line-through; }
+.task .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 2px; font-size: 0.8rem; color: var(--muted); }
+.task.due-overdue .due { color: var(--danger); font-weight: 600; }
+.task.due-today .due { color: var(--accent); font-weight: 600; }
+.tag {
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--text);
+}
+
+.filters { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.segmented { display: inline-flex; align-self: flex-start; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.segmented button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+}
+.segmented button + button { border-left: 1px solid var(--border); }
+.segmented button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+.tag-filter { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 3px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
 
 .delete {
   padding: 4px 10px;
