@@ -6,8 +6,12 @@ Tasks are saved in the browser's **localStorage**, so they survive reloads.
 - **Due dates** (optional, date only): unfinished tasks past their date show **Overdue** in red, and tasks due today show **Due today**.
 - **Tags**: enter them comma-separated when adding a task (`work, urgent`). They are trimmed, lowercased and de-duplicated.
 - **Filters**: **All / Active / Completed**, plus one tag at a time (or "All tags"). Both filters apply together.
+- **Recurring tasks**: set **Repeat** to Daily, Weekly or Monthly. Marking a recurring task done keeps it in
+  Completed and creates the next occurrence, due exactly one interval after the previous due date (a strict
+  schedule, so it may still be overdue). Monthly clamps to the month's last day (Oct 31 → Nov 30). With no due
+  date, the series starts today. To end a series, delete its open occurrence.
 
-Built for ticket #4, with filters, due dates and tags added in #5. It is plain HTML, CSS and JavaScript, with no build step or dependencies.
+Built for ticket #4, with filters, due dates and tags added in #5 and recurring tasks in #7. It is plain HTML, CSS and JavaScript, with no build step or dependencies.
 
 ## Run it
 
@@ -34,8 +38,10 @@ Tasks are stored under the localStorage key `todo.tasks.v1`, as a JSON array:
 
 ```json
 [{ "id": "…", "title": "Buy milk", "done": false, "createdAt": "2026-10-26T07:30:00.000Z",
-   "dueDate": "2026-10-28", "tags": ["home"] }]
+   "dueDate": "2026-10-28", "tags": ["home"], "repeat": "weekly", "nextId": "…" }]
 ```
 
-`dueDate` (`YYYY-MM-DD` or `null`) and `tags` were added in #5 and are optional. Tasks saved by older
-versions load with no due date and no tags. Keep any future fields optional in the same way.
+`dueDate` (`YYYY-MM-DD` or `null`) and `tags` were added in #5. `repeat` (`daily` | `weekly` | `monthly`
+or `null`) and `nextId` (the occurrence a completed recurring task created, which prevents duplicates when
+it is unticked and re-ticked) were added in #7. All of them are optional, and tasks saved by older versions
+load with defaults. Keep any future fields optional in the same way.
