@@ -25,7 +25,8 @@ const rules = [
   [/\bgh\s+pr\s+merge\b[^\n]*(--delete-branch|\s-d\b)/, "deletes the PR branch"],
   [/\bgh\s+repo\s+(archive|rename|edit)\b/, "changes repository settings"],
   [/\bgh\s+api\b[^\n]*(-X|--method)\s*DELETE\b/i, "deletes a GitHub resource"],
-  [/\b(mkfs|format)\b\s+\S/i, "formats a disk"],
+  [/(^|[\s;&|(])mkfs(\.\w+)?\s/, "formats a disk"],
+  [/(^|[;&|(]\s*)format(\.com)?\s+[a-z]:/i, "formats a disk"],
 ];
 
 for (const [re, why] of rules) {
