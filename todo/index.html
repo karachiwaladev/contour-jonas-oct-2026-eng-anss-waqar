@@ -43,6 +43,8 @@
     <p class="error" id="error" role="alert" hidden>Please enter a task.</p>
 
     <nav class="filters" aria-label="Filters">
+      <label class="visually-hidden" for="search">Search tasks</label>
+      <input id="search" class="search" name="search" type="search" placeholder="Search by title or tag…" autocomplete="off">
       <div class="segmented" role="group" aria-label="Status" id="status-filter">
         <button type="button" data-status="all" aria-pressed="true">All</button>
         <button type="button" data-status="active" aria-pressed="false">Active</button>
