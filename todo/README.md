@@ -10,8 +10,14 @@ Tasks are saved in the browser's **localStorage**, so they survive reloads.
   Completed and creates the next occurrence, due exactly one interval after the previous due date (a strict
   schedule, so it may still be overdue). Monthly clamps to the month's last day (Oct 31 → Nov 30). With no due
   date, the series starts today. To end a series, delete its open occurrence.
+- **Priority**: every task is **▲ High**, **● Medium** (the default) or **▼ Low**. Pick it when adding a task,
+  and filter with **All priorities / High / Medium / Low**. The priority filter combines with the status and tag
+  filters. A recurring task's next occurrence keeps its priority.
+- **Edit**: the **Edit** button turns a task into an inline form for its title, priority, due date, repeat and tags.
+  **Save** (or Enter) keeps the changes, and **Cancel** (or Escape) discards them. The done state and history are
+  unchanged.
 
-Built for ticket #4, with filters, due dates and tags added in #5 and recurring tasks in #7. It is plain HTML, CSS and JavaScript, with no build step or dependencies.
+Built for ticket #4, with filters, due dates and tags added in #5, recurring tasks in #7, and priority and editing in #9. It is plain HTML, CSS and JavaScript, with no build step or dependencies.
 
 ## Run it
 
@@ -38,8 +44,10 @@ Tasks are stored under the localStorage key `todo.tasks.v1`, as a JSON array:
 
 ```json
 [{ "id": "…", "title": "Buy milk", "done": false, "createdAt": "2026-10-26T07:30:00.000Z",
-   "dueDate": "2026-10-28", "tags": ["home"], "repeat": "weekly", "nextId": "…" }]
+   "dueDate": "2026-10-28", "tags": ["home"], "repeat": "weekly", "nextId": "…", "priority": "high" }]
 ```
+
+`priority` (`high` | `medium` | `low`) was added in #9. Tasks without it load as `medium`.
 
 `dueDate` (`YYYY-MM-DD` or `null`) and `tags` were added in #5. `repeat` (`daily` | `weekly` | `monthly`
 or `null`) and `nextId` (the occurrence a completed recurring task created, which prevents duplicates when
