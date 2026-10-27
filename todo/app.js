@@ -143,6 +143,17 @@ const empty = document.getElementById("empty");
 const count = document.getElementById("count");
 const statusFilter = document.getElementById("status-filter");
 const tagFilter = document.getElementById("tag-filter");
+const totals = document.getElementById("totals");
+const openCount = document.getElementById("open-count");
+const doneCount = document.getElementById("done-count");
+
+// Footer: open and done counts across all tasks, whatever filters are active.
+function renderTotals() {
+  const done = tasks.filter((t) => t.done).length;
+  openCount.textContent = String(tasks.length - done);
+  doneCount.textContent = String(done);
+  totals.hidden = tasks.length === 0;
+}
 
 function render() {
   // Drop a tag filter whose last task was deleted.
@@ -158,6 +169,7 @@ function render() {
 
   const remaining = tasks.filter((t) => !t.done).length;
   count.textContent = tasks.length ? `${remaining} of ${tasks.length} remaining` : "";
+  renderTotals();
 }
 
 function renderFilters(tags) {

@@ -6,6 +6,8 @@ Tasks are saved in the browser's **localStorage**, so they survive reloads.
 - **Due dates** (optional, date only): unfinished tasks past their date show **Overdue** in red, and tasks due today show **Due today**.
 - **Tags**: enter them comma-separated when adding a task (`work, urgent`). They are trimmed, lowercased and de-duplicated.
 - **Filters**: **All / Active / Completed**, plus one tag at a time (or "All tags"). Both filters apply together.
+- **Footer totals** (#10): below the list, "**N** open · **M** done" counts all tasks, regardless of the active
+  filters. It's hidden when there are no tasks.
 - **Recurring tasks**: set **Repeat** to Daily, Weekly or Monthly. Marking a recurring task done keeps it in
   Completed and creates the next occurrence, due exactly one interval after the previous due date (a strict
   schedule, so it may still be overdue). Monthly clamps to the month's last day (Oct 31 → Nov 30). With no due
