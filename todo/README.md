@@ -3,6 +3,9 @@
 A simple todo app. You can create tasks, mark them done or not done, and delete them.
 Tasks are saved in the browser's **localStorage**, so they survive reloads.
 
+- **Search** (#13): the search box filters tasks by title or tag as you type (case-insensitive; `work` and `#work`
+  both match the tag). It combines with the status and tag filters. Clearing the box, or pressing Escape, shows
+  everything again.
 - **Due dates** (optional, date only): unfinished tasks past their date show **Overdue** in red, and tasks due today show **Due today**.
 - **Tags**: enter them comma-separated when adding a task (`work, urgent`). They are trimmed, lowercased and de-duplicated.
 - **Filters**: **All / Active / Completed**, plus one tag at a time (or "All tags"). Both filters apply together.

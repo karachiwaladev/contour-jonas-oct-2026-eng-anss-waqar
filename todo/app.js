@@ -123,6 +123,7 @@ function allTags() {
 
 function visibleTasks() {
   return tasks.filter((t) => {
+    if (!matchesSearch(t)) return false;
     if (filters.status === "active" && t.done) return false;
     if (filters.status === "completed" && !t.done) return false;
     if (filters.tag && !t.tags.includes(filters.tag)) return false;
@@ -253,6 +254,30 @@ form.addEventListener("submit", (event) => {
 });
 
 input.addEventListener("input", () => { error.hidden = true; });
+
+// --- Search (#13) ------------------------------------------------------------
+// Case-insensitive substring match on the title or any tag ("#work" and
+// "work" both match the tag). Combines (AND) with the other filters.
+const searchInput = document.getElementById("search");
+let searchQuery = "";
+
+function matchesSearch(task) {
+  if (!searchQuery) return true;
+  const q = searchQuery.replace(/^#/, "");
+  return task.title.toLowerCase().includes(searchQuery) || task.tags.some((tag) => tag.includes(q));
+}
+
+searchInput.addEventListener("input", () => {
+  searchQuery = searchInput.value.trim().toLowerCase();
+  render();
+});
+searchInput.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && searchInput.value) {
+    searchInput.value = "";
+    searchQuery = "";
+    render();
+  }
+});
 
 statusFilter.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-status]");
