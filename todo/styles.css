@@ -9,6 +9,7 @@
   --danger: #c62828;
   --error: #b42318;
   --chip: #eef1f6;
+  --warn: #b45309;
   color-scheme: light;
 }
 
@@ -24,6 +25,7 @@
     --danger: #ff6b6b;
     --error: #ff8a80;
     --chip: #2a303b;
+    --warn: #fbbf24;
     color-scheme: dark;
   }
 }
@@ -101,6 +103,39 @@ button {
 .task.due-overdue .due { color: var(--danger); font-weight: 600; }
 .task.due-today .due { color: var(--accent); font-weight: 600; }
 .repeat { color: var(--accent); font-weight: 600; }
+.priority { font-weight: 600; }
+.priority-high { color: var(--danger); }
+.priority-medium { color: var(--warn); }
+.priority-low { color: var(--muted); }
+.chip.priority-chip[aria-pressed="true"] { color: var(--accent-text); }
+
+.actions { display: flex; gap: 6px; flex-shrink: 0; }
+.edit {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+.edit:hover { border-color: var(--accent); }
+
+.task.editing { display: block; }
+.editor { display: flex; flex-direction: column; gap: 8px; }
+.editor .row { display: flex; flex-wrap: wrap; gap: 8px; }
+.editor input,
+.editor select {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 10px;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.editor .error { margin: 0; }
+.editor .save { padding: 6px 16px; border: none; background: var(--accent); color: var(--accent-text); font-weight: 600; }
+.editor .cancel { padding: 6px 16px; border: 1px solid var(--border); background: transparent; color: var(--text); }
 .tag {
   padding: 0 8px;
   border-radius: 999px;

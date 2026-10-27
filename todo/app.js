@@ -1,11 +1,12 @@
 // Todo app: tasks persist in localStorage. Storage is kept separate from
 // rendering so the data model can grow without UI rewrites.
 //
-// Task shape: { id, title, done, createdAt, dueDate?, tags?, repeat?, nextId? }
+// Task shape: { id, title, done, createdAt, dueDate?, tags?, repeat?, nextId?, priority? }
 // dueDate ("YYYY-MM-DD") and tags (string[]) were added in #5; repeat
 // ("daily" | "weekly" | "monthly") and nextId (the occurrence a completed
-// recurring task spawned) in #7. All are optional, so tasks saved by older
-// versions load unchanged.
+// recurring task spawned) in #7; priority ("high" | "medium" | "low") in #9.
+// All are optional, so tasks saved by older versions load unchanged
+// (a missing priority reads as "medium").
 
 const store = {
   key: "todo.tasks.v1",
@@ -30,13 +31,17 @@ function normalize(task) {
     dueDate: typeof task.dueDate === "string" && task.dueDate ? task.dueDate : null,
     tags: Array.isArray(task.tags) ? task.tags : [],
     repeat: REPEATS.includes(task.repeat) ? task.repeat : null,
+    priority: PRIORITIES.includes(task.priority) ? task.priority : "medium",
   };
 }
 
 const REPEATS = ["daily", "weekly", "monthly"];
+const PRIORITIES = ["high", "medium", "low"];
+const PRIORITY_LABELS = { high: "▲ High", medium: "● Medium", low: "▼ Low" };
 
 let tasks = store.load();
-const filters = { status: "all", tag: null };
+const filters = { status: "all", tag: null, priority: null };
+let editingId = null; // the task currently shown as an inline edit form
 
 const newId = () =>
   (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -47,10 +52,27 @@ function parseTags(text) {
   return [...new Set(tags)];
 }
 
-function addTask(title, dueDate, tags, repeat) {
+function addTask(title, dueDate, tags, repeat, priority) {
   // A recurring task needs a due date to count from; default to today.
   const due = dueDate || (repeat ? today() : null);
-  tasks.unshift({ id: newId(), title, done: false, createdAt: new Date().toISOString(), dueDate: due, tags, repeat: repeat || null });
+  tasks.unshift({
+    id: newId(), title, done: false, createdAt: new Date().toISOString(),
+    dueDate: due, tags, repeat: repeat || null,
+    priority: PRIORITIES.includes(priority) ? priority : "medium",
+  });
+  store.save(tasks);
+}
+
+// Edits title, priority, due date, repeat and tags. Done state and history
+// (createdAt, nextId) are kept.
+function updateTask(id, { title, dueDate, tags, repeat, priority }) {
+  const task = tasks.find((t) => t.id === id);
+  if (!task) return;
+  task.title = title;
+  task.repeat = repeat || null;
+  task.dueDate = dueDate || (task.repeat ? today() : null);
+  task.tags = tags;
+  task.priority = PRIORITIES.includes(priority) ? priority : "medium";
   store.save(tasks);
 }
 
@@ -69,6 +91,7 @@ function toggleTask(id) {
       dueDate: nextDueDate(task.dueDate || today(), task.repeat),
       tags: [...task.tags],
       repeat: task.repeat,
+      priority: task.priority,
     };
     task.nextId = next.id;
     tasks.unshift(next);
@@ -78,6 +101,7 @@ function toggleTask(id) {
 
 function deleteTask(id) {
   tasks = tasks.filter((t) => t.id !== id);
+  if (editingId === id) editingId = null;
   store.save(tasks);
 }
 
@@ -126,6 +150,7 @@ function visibleTasks() {
     if (filters.status === "active" && t.done) return false;
     if (filters.status === "completed" && !t.done) return false;
     if (filters.tag && !t.tags.includes(filters.tag)) return false;
+    if (filters.priority && t.priority !== filters.priority) return false;
     return true;
   });
 }
@@ -137,6 +162,8 @@ const input = document.getElementById("title");
 const dueInput = document.getElementById("due");
 const tagsInput = document.getElementById("tags");
 const repeatInput = document.getElementById("repeat");
+const priorityInput = document.getElementById("priority");
+const priorityFilter = document.getElementById("priority-filter");
 const error = document.getElementById("error");
 const list = document.getElementById("list");
 const empty = document.getElementById("empty");
@@ -176,9 +203,117 @@ function renderFilters(tags) {
     return button;
   };
   tagFilter.replaceChildren(chip("All tags", null), ...tags.map((tag) => chip(`#${tag}`, tag)));
+
+  priorityFilter.hidden = tasks.length === 0;
+  const priorityChip = (label, value) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = value ? `chip priority-chip priority-${value}` : "chip";
+    button.textContent = label;
+    button.setAttribute("aria-pressed", String(filters.priority === value));
+    button.addEventListener("click", () => { filters.priority = value; render(); });
+    return button;
+  };
+  priorityFilter.replaceChildren(
+    priorityChip("All priorities", null),
+    ...PRIORITIES.map((p) => priorityChip(PRIORITY_LABELS[p], p)),
+  );
+}
+
+function selectOf(options, value, label) {
+  const select = document.createElement("select");
+  select.name = label.toLowerCase();
+  select.setAttribute("aria-label", label);
+  for (const [optValue, optLabel] of options) {
+    const option = document.createElement("option");
+    option.value = optValue;
+    option.textContent = optLabel;
+    select.append(option);
+  }
+  select.value = value;
+  return select;
+}
+
+// Inline edit form for one task: title, priority, due date, repeat, tags.
+function renderEditor(task) {
+  const li = document.createElement("li");
+  li.className = "task editing";
+  li.dataset.id = task.id;
+
+  const editor = document.createElement("form");
+  editor.className = "editor";
+  editor.setAttribute("aria-label", `Edit "${task.title}"`);
+
+  const titleInput = document.createElement("input");
+  titleInput.type = "text";
+  titleInput.className = "edit-title";
+  titleInput.name = "title";
+  titleInput.maxLength = 200;
+  titleInput.value = task.title;
+  titleInput.setAttribute("aria-label", "Task title");
+
+  const priority = selectOf(PRIORITIES.map((p) => [p, PRIORITY_LABELS[p]]), task.priority, "Priority");
+  priority.className = "edit-priority";
+  const due = document.createElement("input");
+  due.type = "date";
+  due.className = "edit-due";
+  due.name = "due";
+  due.value = task.dueDate || "";
+  due.setAttribute("aria-label", "Due date");
+  const repeat = selectOf([["", "Never"], ["daily", "Daily"], ["weekly", "Weekly"], ["monthly", "Monthly"]], task.repeat || "", "Repeat");
+  repeat.className = "edit-repeat";
+  const tagsField = document.createElement("input");
+  tagsField.type = "text";
+  tagsField.className = "edit-tags";
+  tagsField.name = "tags";
+  tagsField.value = task.tags.join(", ");
+  tagsField.placeholder = "work, urgent";
+  tagsField.setAttribute("aria-label", "Tags");
+
+  const editError = document.createElement("p");
+  editError.className = "error";
+  editError.setAttribute("role", "alert");
+  editError.textContent = "Please enter a task.";
+  editError.hidden = true;
+
+  const save = document.createElement("button");
+  save.type = "submit";
+  save.className = "save";
+  save.textContent = "Save";
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.className = "cancel";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", () => { editingId = null; render(); });
+
+  const row = (...children) => { const div = document.createElement("div"); div.className = "row"; div.append(...children); return div; };
+  editor.append(
+    row(titleInput),
+    row(priority, due, repeat),
+    row(tagsField),
+    editError,
+    row(save, cancel),
+  );
+
+  editor.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const title = titleInput.value.trim();
+    if (!title) { editError.hidden = false; titleInput.focus(); return; }
+    updateTask(task.id, { title, dueDate: due.value, tags: parseTags(tagsField.value), repeat: repeat.value, priority: priority.value });
+    editingId = null;
+    render();
+  });
+  editor.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") { editingId = null; render(); }
+  });
+
+  li.append(editor);
+  queueMicrotask(() => titleInput.focus());
+  return li;
 }
 
 function renderTask(task) {
+  if (task.id === editingId) return renderEditor(task);
   const li = document.createElement("li");
   const state = dueState(task);
   li.className = ["task", task.done && "done", state && `due-${state}`].filter(Boolean).join(" ");
@@ -198,9 +333,14 @@ function renderTask(task) {
   title.textContent = task.title;
   body.append(title);
 
-  if (task.dueDate || task.tags.length || task.repeat) {
+  {
     const meta = document.createElement("span");
     meta.className = "meta";
+    const priority = document.createElement("span");
+    priority.className = `priority priority-${task.priority}`;
+    priority.textContent = PRIORITY_LABELS[task.priority];
+    priority.title = `Priority: ${task.priority}`;
+    meta.append(priority);
     if (task.dueDate) {
       const due = document.createElement("span");
       due.className = "due";
@@ -226,6 +366,13 @@ function renderTask(task) {
 
   label.append(checkbox, body);
 
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.className = "edit";
+  edit.textContent = "Edit";
+  edit.setAttribute("aria-label", `Edit "${task.title}"`);
+  edit.addEventListener("click", () => { editingId = task.id; render(); });
+
   const del = document.createElement("button");
   del.type = "button";
   del.className = "delete";
@@ -233,7 +380,11 @@ function renderTask(task) {
   del.setAttribute("aria-label", `Delete "${task.title}"`);
   del.addEventListener("click", () => { deleteTask(task.id); render(); });
 
-  li.append(label, del);
+  const actions = document.createElement("span");
+  actions.className = "actions";
+  actions.append(edit, del);
+
+  li.append(label, actions);
   return li;
 }
 
@@ -246,7 +397,7 @@ form.addEventListener("submit", (event) => {
     return;
   }
   error.hidden = true;
-  addTask(title, dueInput.value, parseTags(tagsInput.value), repeatInput.value);
+  addTask(title, dueInput.value, parseTags(tagsInput.value), repeatInput.value, priorityInput.value);
   form.reset();
   input.focus();
   render();
